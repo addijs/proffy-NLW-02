@@ -1,9 +1,11 @@
 import express from 'express';
 import ClassesController from './controllers/ClassesController';
+import ConnectionsController from './controllers/ConnectionsController';
 
 interface Controllers {
 	// Add new controllers here
 	ClassesController: ClassesController;
+	ConnectionsController: ConnectionsController;
 }
 
 class Routes {
@@ -14,7 +16,8 @@ class Routes {
 		this.router = express.Router();
 		this.controllers = {
 			// Instance new controllers here
-			ClassesController: new ClassesController()
+			ClassesController: new ClassesController(),
+			ConnectionsController: new ConnectionsController()
 		}
 		this.init();
 	}
@@ -22,6 +25,9 @@ class Routes {
 	private init() {
 		this.router.post('/classes', this.controllers.ClassesController.create);
 		this.router.get('/classes', this.controllers.ClassesController.index);
+
+		this.router.post('/connections', this.controllers.ConnectionsController.create);
+		this.router.get('/connections', this.controllers.ConnectionsController.index);
 	}
 }
 
