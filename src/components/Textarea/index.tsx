@@ -1,4 +1,4 @@
-import React, { TextareaHTMLAttributes } from 'react';
+import React, { forwardRef, TextareaHTMLAttributes } from 'react';
 
 import './styles.css';
 
@@ -7,13 +7,13 @@ interface Props extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 	label: string;
 }
 
-const Textarea: React.FC<Props> = ({ name, label, ...rest }) => {
+const Textarea = forwardRef<HTMLTextAreaElement, Props>(({ name, label, ...rest }, ref) => {
 	return (
 		<div className="textarea-block">
 			<label htmlFor={ name }>{ label }</label>
-			<textarea id={ name } {...rest} />
+			<textarea ref={ref} id={ name } {...rest} />
 		</div>
 	);
-}
+});
 
 export default Textarea;

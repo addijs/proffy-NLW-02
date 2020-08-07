@@ -1,4 +1,4 @@
-import React, { SelectHTMLAttributes } from 'react';
+import React, { forwardRef, SelectHTMLAttributes } from 'react';
 
 import './styles.css';
 
@@ -11,11 +11,11 @@ interface Props extends SelectHTMLAttributes<HTMLSelectElement> {
 	}>
 }
 
-const Select: React.FC<Props> = ({ name, label, options, ...rest }) => {
+const Select = forwardRef<HTMLSelectElement, Props>(({ name, label, options, ...rest }, ref) => {
 	return (
 		<div className="select-block">
 			<label htmlFor={ name }>{ label }</label>
-			<select defaultValue='default' id={ name } {...rest}>
+			<select ref={ref} defaultValue='default' id={ name } {...rest}>
 				<option value='default' disabled hidden>Selecione uma opção</option>
 
 				{options.map(option => {
@@ -24,6 +24,6 @@ const Select: React.FC<Props> = ({ name, label, options, ...rest }) => {
 			</select>
 		</div>
 	);
-}
+});
 
 export default Select;
