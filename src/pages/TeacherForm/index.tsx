@@ -1,4 +1,6 @@
 import React, { useRef, useState } from 'react'
+import api from '../../services/api';
+
 import PageHeader from '../../components/PageHeader'
 import Input from '../../components/Input'
 import Textarea from '../../components/Textarea';
@@ -26,7 +28,41 @@ const TeacherForm: React.FC = () => {
 		])
 	}
 
-	const scheduleFieldsetRef = useRef<HTMLFieldSetElement>(null);
+	function handleSubmit() {
+		api.post('/classes', {
+			name: inputNameRef.current?.value,
+			avatar: inputAvatarRef.current?.value,
+			whatsapp: inputWhatsappRef.current?.value,
+			bio: textAreaRef.current?.value,
+			subject: subjectSelectRef.current?.value,
+			cost: Number(inputCostRef.current?.value),
+			schedule: scheduleItems
+		}).then(() => {
+			alert('Cadastro realizado com sucesso!');
+		}).catch(() => {
+			alert('Erro no cadastro. :(');
+		})
+	}
+
+	function setScheduleItemsValue(index: number, field: string, value: string) {
+		const updatedScheduleItems = scheduleItems.map((item, itemIndex) => {
+			if(itemIndex !== index) return item;
+
+			return {
+				...item,
+				[field]: value
+			}
+		});
+
+		setScheduleItems(updatedScheduleItems);
+	}
+
+	const inputNameRef = useRef<HTMLInputElement>(null);
+	const inputAvatarRef = useRef<HTMLInputElement>(null);
+	const inputWhatsappRef = useRef<HTMLInputElement>(null);
+	const textAreaRef = useRef<HTMLTextAreaElement>(null);
+	const subjectSelectRef = useRef<HTMLSelectElement>(null);
+	const inputCostRef = useRef<HTMLInputElement>(null);
 
 	return (
 		<div id="page-teacher-form" className="container">
@@ -38,17 +74,18 @@ const TeacherForm: React.FC = () => {
 				<fieldset>
 					<legend>Seus dados</legend>
 
-					<Input inputName='name' label='Nome completo'/>
-					<Input inputName='avatar' label='Avatar'/>
-					<Input inputName='whatsapp' label='WhatsApp'/>
+					<Input ref={inputNameRef} inputName='name' label='Nome completo'/>
+					<Input ref={inputAvatarRef} inputName='avatar' label='Avatar'/>
+					<Input ref={inputWhatsappRef} inputName='whatsapp' label='WhatsApp'/>
 
-					<Textarea name='bio' label='Biografia'/>
+					<Textarea ref={textAreaRef} name='bio' label='Biografia'/>
 				</fieldset>
 
 				<fieldset>
 					<legend>Sobre a aula</legend>
 
 					<Select 
+						ref={subjectSelectRef}
 						name='subject' 
 						label='Matéria'
 						options={[
@@ -58,18 +95,18 @@ const TeacherForm: React.FC = () => {
 							{ value: 'Matemática', label: 'Matemática'}
 						]}
 					/>
-					<Input inputName='cost' label='Custo da sua hora por aula'/>
+					<Input ref={inputCostRef} inputName='cost' label='Custo da sua hora por aula'/>
 				</fieldset>
 
-				<fieldset ref={scheduleFieldsetRef}>
+				<fieldset>
 					<legend>
 						Horários disponíveis
 						<button type='button' onClick={addNewScheduleItem}>+ Novo Horário</button>
 					</legend>
 
-					{ scheduleItems.map(item => {
+					{ scheduleItems.map((item, index) => {
 						return (
-							<div key={item.week_day} className="schedule-item">
+							<div key={index} className="schedule-item">
 								<Select 
 									name='week-day' 
 									label='Dia da Semana'
@@ -82,10 +119,17 @@ const TeacherForm: React.FC = () => {
 										{ value: '5', label: 'Sexta-feira'},
 										{ value: '6', label: 'Sábado'}
 									]}
+									onChange={e => setScheduleItemsValue(index, 'week_day', e.target.value)}
 								/>
 		
-								<Input inputName='from' label='Das' type='time'/>
-								<Input inputName='to' label='Até' type='time'/>
+								<Input
+									onChange={e => setScheduleItemsValue(index, 'from', e.target.value)}
+									inputName='from' label='Das' type='time'
+								/>
+								<Input
+									onChange={e => setScheduleItemsValue(index, 'to', e.target.value)}
+									inputName='to' label='Até' type='time'
+								/>
 							</div>
 						)
 					})}
@@ -98,7 +142,7 @@ const TeacherForm: React.FC = () => {
 						Preencha todos os dados
 					</p>
 
-					<button type='button'>
+					<button type='button' onClick={handleSubmit}>
 						Salvar cadastro
 					</button>
 				</footer>
