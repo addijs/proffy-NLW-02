@@ -1,6 +1,6 @@
 # Proffy
 
-Aplicação responsiva desenvolvida durante a Next Level Week #02 da [Rocketseat](https://rocketseat.com.br/).
+Frontend responsivo da aplicação desenvolvida durante a Next Level Week #02 da [Rocketseat](https://rocketseat.com.br/).
 
 ### Techs
   - React
