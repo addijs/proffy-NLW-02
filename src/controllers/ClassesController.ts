@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import db from '../database/connection';
+import db from '../database/db';
 
 function convertHoursToMinutes(time: string) {
 	const [hour, minutes] = time.split(':').map(Number);
@@ -57,7 +57,7 @@ export default class ClassesController {
 			// })
 			.select('classes.*', 'users.*')
 
-		return res.json(classes);
+		return res.status(200).json(classes);
 	}
 
 	async create(req: CustomBodyRequest<IClassesInfo>, res: Response) {
