@@ -4,19 +4,32 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "tsnd --transpile-only --respawn --ignore-watch node_modules src/server.ts",
-    "knex:make-migration": "knex migrate:make",
-    "knex:migrate": "knex migrate:latest"
+    "dev": "tsnd --transpile-only --respawn --ignore-watch node_modules src/server.ts --ignore ./src/__tests__",
+		"knex:make-migration": "knex migrate:make",
+		"knex:make-seed": "knex seed:make",
+    "knex:migrate": "knex migrate:latest",
+		"test": "jest --runInBand --silent",
+		"test:log": "jest --runInBand"
   },
   "devDependencies": {
+    "@types/bcrypt": "^3.0.0",
     "@types/cors": "^2.8.7",
     "@types/express": "^4.17.7",
+    "@types/jest": "^26.0.9",
+    "@types/jsonwebtoken": "^8.5.0",
+    "@types/supertest": "^2.0.10",
+    "jest": "^26.2.2",
+    "supertest": "^4.0.2",
+    "ts-jest": "^26.1.4",
     "ts-node-dev": "^1.0.0-pre.56",
     "typescript": "^3.9.7"
   },
   "dependencies": {
+    "bcrypt": "^5.0.0",
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.2",
     "sqlite3": "^5.0.0"
   }
