@@ -36,36 +36,58 @@ export default class ClassesController {
 		const subject = req.query.subject as string;
 		const time =  req.query.time as string;
 
-		if(!week_day || !subject || !time) {
+		try {
+			if(!week_day || !subject || !time) {
+				const classes = await db('classes')
+					.join('users', 'classes.user_id', '=', 'users.id')
+					.join('class_schedule', 'classes.id', '=', 'class_schedule.class_id')
+					.select(
+						'classes.*', 
+						'users.first_name',
+						'users.last_name',
+						'users.bio',
+						'users.avatar',
+						'users.whatsapp',
+					);
+	
+				return res.status(200).json(classes);
+			}
+
+			const timeInMinutes = convertHoursToMinutes(time);
+	
+			const classes = await db('classes')
+				.join('users', 'classes.user_id', '=', 'users.id')
+				.join('class_schedule', 'classes.id', '=', 'class_schedule.class_id')
+				.where('classes.subject', '=', subject)
+				.where('class_schedule.week_day', '=', week_day)
+				.where('class_schedule.from', '<=', timeInMinutes)
+				.where('class_schedule.to', '>', timeInMinutes)
+				// .whereIn(week_day, function() {
+				// 	this.select('week_day').from('class_schedule')
+				// 	.whereRaw('`class_schedule`.`class_id` = `classes`.`id`');
+				// })
+				.select(
+					'classes.*', 
+					'users.first_name',
+					'users.last_name',
+					'users.bio',
+					'users.avatar',
+					'users.whatsapp',
+				)
+	
+			return res.status(200).json(classes);
+		} catch(err) {
+
 			return res.status(400).json({
-				error: "Missing filter to search classes."
+				error: 'Unexpected error while creating class'
 			});
 		}
-
-		const timeInMinutes = convertHoursToMinutes(time);
-
-		const classes = await db('classes')
-			.join('users', 'classes.user_id', '=', 'users.id')
-			.join('class_schedule', 'classes.id', '=', 'class_schedule.class_id')
-			.where('classes.subject', '=', subject)
-			.where('class_schedule.week_day', '=', week_day)
-			.where('class_schedule.from', '<=', timeInMinutes)
-			.where('class_schedule.to', '>', timeInMinutes)
-			// .whereIn(week_day, function() {
-			// 	this.select('week_day').from('class_schedule')
-			// 	.whereRaw('`class_schedule`.`class_id` = `classes`.`id`');
-			// })
-			.select('classes.*', 'users.*')
-
-		return res.status(200).json(classes);
 	}
 
 	async create(req: CustomBodyRequest<IClassesInfo>, res: Response) {
+		const user_id = res.locals.id;
+
 		const {
-			name,
-			avatar,
-			whatsapp,
-			bio,
 			subject,
 			cost,
 			schedule
@@ -76,26 +98,15 @@ export default class ClassesController {
 		const trx = await db.transaction();
 
 		try {
-
-			// Adding user //
-			const insertedUsersIds = await trx('users').insert({
-				name,
-				avatar,
-				whatsapp,
-				bio
-			});
-
 			// Adding user classes //
-			const user_id = insertedUsersIds[0];
 			
 			const insertedClassesIds = await trx('classes').insert({
 				user_id,
 				subject,
-				cost,
+				cost
 			});
 
 			// Adding user schedules //
-
 			const class_id = insertedClassesIds[0];
 
 			const classSchedule = schedule.map(scheduleItem => {
@@ -111,12 +122,12 @@ export default class ClassesController {
 
 			await trx.commit();
 
-			return res.status(201).send();
+			return res.sendStatus(201);
 		} catch(err) {
 
 			trx.rollback();
 
-			return res.send(400).json({
+			return res.status(400).json({
 				error: 'Unexpected error while creating new class'
 			});
 		}
