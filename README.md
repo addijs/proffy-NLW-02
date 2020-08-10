@@ -10,7 +10,7 @@ Backend da aplicação desenvolvida durante a Next Level Week #02 da [Rocketseat
 	- Jest
 
 # Todos!
-	- [x] Autenticação de usuários
+  - [x] Autenticação de usuários
   - Recuperação de senhas
   - Atualização de dados do usuário e das aulas
   - Paginação na listagem de proffys
