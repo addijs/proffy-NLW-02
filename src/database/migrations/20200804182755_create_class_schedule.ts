@@ -7,13 +7,12 @@ export async function up(knex: Knex): Promise<void> {
 		table.integer('from').notNullable();
 		table.integer('to').notNullable();
 
-		table.integer('class_id')
-			.notNullable()
+		table.integer('class_id').notNullable()
 			.references('id')
 			.inTable('classes')
 			.onUpdate('CASCADE')
 			.onDelete('CASCADE');
-	})
+	});
 }
 
 

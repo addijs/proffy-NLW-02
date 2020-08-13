@@ -10,6 +10,7 @@ export async function up(knex: Knex): Promise<void> {
 		table.string('avatar');
 		table.string('whatsapp');
 		table.string('bio');
+		table.string('token');
 	})
 }
 
