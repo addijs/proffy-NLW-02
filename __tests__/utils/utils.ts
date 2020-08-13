@@ -1,12 +1,12 @@
 import request from 'supertest';
 import app from '../../src/app';
 
-export async function createUser() {
+export async function createUser(email: string, password = 'fulano123') {
 	const newUser = {
 		first_name: 'Fulano',
 		last_name: 'de Teste',
-		email: 'fulano@gmail.com',
-		password: 'fulano123'
+		email,
+		password 
 	}
 
 	const res = await request(app).post('/user').send(newUser);
@@ -18,8 +18,8 @@ export async function createUser() {
 	}
 }
 
-export async function createUserAndLogin() {
-	const { fakeEmail, fakePassword } = await createUser();
+export async function createUserAndLogin(email: string) {
+	const { fakeEmail, fakePassword } = await createUser(email);
 
 	const res = await request(app)
 		.post('/login')

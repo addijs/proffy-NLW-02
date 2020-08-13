@@ -13,14 +13,14 @@ describe('Auth tests', () => {
 	});
 
 	it('should return jwt token when authenticated', async () => {
-		const res = await createUserAndLogin();
+		const res = await createUserAndLogin('fulano@gmail.com');
 
 		expect(res.status).toBe(200);
 		expect(res.body).toHaveProperty('token');
 	});
 
 	it('should NOT be able to authenticate a user with an unknown e-mail', async () => {
-		await createUser();
+		await createUser('fulano@gmail.com');
 
 		const res = await request(app)
 			.post('/login')
@@ -34,7 +34,7 @@ describe('Auth tests', () => {
 	});
 
 	it('should NOT be able to authenticate a user with a wrong password', async () => {
-		const { fakeEmail } = await createUser();
+		const { fakeEmail } = await createUser('fulano@gmail.com');
 
 		const res = await request(app)
 			.post('/login')
@@ -48,7 +48,7 @@ describe('Auth tests', () => {
 	});
 
 	it('should be able to access private routes when authenticated', async () => {
-		const tokenResponse = await createUserAndLogin();
+		const tokenResponse = await createUserAndLogin('fulano@gmail.com');
 
 		const res = await request(app)
 			.get('/user')
@@ -75,6 +75,16 @@ describe('Auth tests', () => {
 		expect(res.body).toMatchObject({
 			error: 'Invalid token'
 		});
+	});
+
+	it('should be able to sign out', async () => {
+		const { body: { token } } = await createUserAndLogin('fulano@gmail.com');
+
+		const res = await request(app)
+			.put('/logout')
+			.set('Authorization', `Bearer ${token}`)
+
+		expect(res.status).toBe(200);
 	});
 
 	afterAll(done => {

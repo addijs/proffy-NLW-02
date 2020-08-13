@@ -13,13 +13,13 @@ describe('User tests', () => {
 	});
 
 	it('should be able to create a user with an encrypted password', async () => {
-		const { res } = await createUser();
+		const { res } = await createUser('fulano@gmail.com');
 
 		expect(res.status).toBe(201);
 	});
 
 	it('should be able to update user data', async () => {
-		const { body: { token } } = await createUserAndLogin();
+		const { body: { token } } = await createUserAndLogin('fulano@gmail.com');
 
 		const userDataToUpdate = {
 			bio: "Mudando a bio",
