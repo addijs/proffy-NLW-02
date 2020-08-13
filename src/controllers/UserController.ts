@@ -19,7 +19,6 @@ export interface CustomBodyRequest extends Request {
 export default class UserControler {
 	async create(req: CustomBodyRequest, res: Response) {
 		const user = req.body;
-
 		
 		try {
 			const encryptedPassword = await bcrypt.hash(user.password, 10);
@@ -64,7 +63,7 @@ export default class UserControler {
 			return res.status(200).json(updatedData);
 
 		} catch(err) {
-			console.log(err);
+
 			return res.status(404).json({
 				error: 'Unexpected error while updating user'
 			});

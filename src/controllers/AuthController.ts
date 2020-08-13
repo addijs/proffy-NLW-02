@@ -19,19 +19,49 @@ export default class AuthController {
 			});
 		}
 
-		const comparedPassword = await bcrypt.compare(userInfo.password, user.password);
+		const isEqual = await bcrypt.compare(userInfo.password, user.password);
 
-		if(!comparedPassword) {
+		if(!isEqual) {
 			return res.status(401).json({
 				error: "Wrong password."
 			});
 		}
 
+		const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY as string, {
+			expiresIn: '5h'
+		});
+
+		await db('users')
+			.where('id', user.id)
+			.update({
+				token
+			});
+		
+		delete user.password;
+		
 		const authenticatedUser = {
 			...user,
-			token: jwt.sign(user.id, process.env.SECRET_KEY as string)
+			token 
 		}
 
 		return res.status(200).json(authenticatedUser);
+	}
+
+	async logout(req: CustomBodyRequest, res: Response) {
+		const userId = res.locals.id;
+
+		try {
+			await db('users')
+				.where('id', userId)
+				.update({
+					token: ''
+				});
+
+			res.sendStatus(200);
+		} catch(err) {
+			res.status(400).json({
+				error: 'Unexpected error on logout'
+			});
+		}
 	}
 }

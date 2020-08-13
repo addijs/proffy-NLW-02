@@ -35,11 +35,16 @@ class Routes {
 
 		this.router.use(authMiddleware);
 
+		this.router.put('/logout', this.controllers.AuthController.logout);
+
 		this.router.get('/user', this.controllers.UserController.getUserById);
 		this.router.put('/user', this.controllers.UserController.update);
 
+		this.router.get('/classes/all', this.controllers.ClassesController.index);
+		this.router.get('/classes/user', this.controllers.ClassesController.getClass);
 		this.router.post('/classes', this.controllers.ClassesController.create);
-		this.router.get('/classes', this.controllers.ClassesController.index);
+		this.router.put('/classes', this.controllers.ClassesController.update);
+		this.router.delete('/classes', this.controllers.ClassesController.delete);
 
 		this.router.post('/connections', this.controllers.ConnectionsController.create);
 		this.router.get('/connections', this.controllers.ConnectionsController.index);
