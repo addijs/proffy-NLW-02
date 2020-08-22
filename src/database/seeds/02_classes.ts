@@ -1,40 +1,15 @@
-import * as Knex from "knex";
+import { Seeder, Factory } from 'typeorm-seeding';
+import { Connection } from 'typeorm';
+import { Class } from '../entities/Class';
+import { User } from '../entities/User';
 
-export async function seed(knex: Knex): Promise<void> {
-    // Deletes ALL existing entries
-    await knex("classes").del();
-
-    // Inserts seed entries
-    await knex("classes").insert([
-			{
-				user_id: 1,
-				subject: "Programação",
-				cost: 100,
-			},
-			{
-				user_id: 2,
-				subject: "Biologia",
-				cost: 40,
-			},
-			{
-				user_id: 3,
-				subject: "Matemática",
-				cost: 50,
-			},
-			{
-				user_id: 4,
-				subject: "Física",
-				cost: 70,
-			},
-			{
-				user_id: 5,
-				subject: "Português",
-				cost: 120,
-			},
-			{
-				user_id: 6,
-				subject: "Química",
-				cost: 40,
-			}
-    ]);
-};
+export default class CreateClasses implements Seeder {
+  public async run(factory: Factory, connection: Connection): Promise<any> {
+		const user = new User();
+		
+		for (let i = 1; i <= 4; i++) {
+			user.id = i;
+			await factory(Class)().create({ user });
+		}
+  }
+}
