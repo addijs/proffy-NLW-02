@@ -1,61 +1,76 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import db from '../database/db';
-import { CustomBodyRequest } from './UserController';
+import { getRepository } from 'typeorm';
+import { User } from '../database/entities/User';
+import { Credentials } from '../database/entities/Credentials';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+interface ICredentials {
+	email: string;
+	password: string;
+}
+
+export interface CustomRequestBody extends Request {
+	body: ICredentials;
+}
+
 export default class AuthController {
-	async login(req: CustomBodyRequest, res: Response) {
-		const userInfo = req.body;
+	private userRepository = getRepository(User);
+	private credentialsRepository = getRepository(Credentials)
+	
+	login = async (req: CustomRequestBody, res: Response) => {
+		const { email: providedEmail, password: providedPassword } = req.body;
 
-		const [ user ] = await db('users').where('email', userInfo.email);
+		try {
+			const [ userCredentials ] = await this.credentialsRepository.find({
+				where: {
+					email: providedEmail
+				},
+				relations: ['user']
+			})
 
-		if(!user) {
-			return res.status(404).json({
-				error: "We can't find that Proffy account"
+			if(!userCredentials) {
+				return res.status(404).json({
+					error: "We can't find that Proffy account."
+				});
+			}
+	
+			const { password, user } = userCredentials;
+			
+			const isEqual = await bcrypt.compare(providedPassword, password);
+	
+			if(!isEqual) {
+				return res.status(401).json({
+					error: "Wrong password."
+				});
+			}
+	
+			const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY as string, {
+				expiresIn: '5h'
+			});
+	
+			user.token = token;
+			
+			const authenticatedUser = await this.userRepository.save(user);
+
+			return res.status(200).json(authenticatedUser);
+
+		} catch(err) {
+			console.log(err);
+			res.status(400).json({
+				error: 'Unexpected error on login'
 			});
 		}
-
-		const isEqual = await bcrypt.compare(userInfo.password, user.password);
-
-		if(!isEqual) {
-			return res.status(401).json({
-				error: "Wrong password."
-			});
-		}
-
-		const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY as string, {
-			expiresIn: '5h'
-		});
-
-		await db('users')
-			.where('id', user.id)
-			.update({
-				token
-			});
-		
-		delete user.password;
-		
-		const authenticatedUser = {
-			...user,
-			token 
-		}
-
-		return res.status(200).json(authenticatedUser);
 	}
 
-	async logout(req: CustomBodyRequest, res: Response) {
+	logout = async (req: CustomRequestBody, res: Response) => {
 		const userId = res.locals.id;
 
 		try {
-			await db('users')
-				.where('id', userId)
-				.update({
-					token: ''
-				});
+			await this.userRepository.save({ id: userId, token: '' });
 
 			res.sendStatus(200);
 		} catch(err) {

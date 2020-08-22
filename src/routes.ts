@@ -5,6 +5,7 @@ import UserControler from './controllers/UserController';
 import AuthController from './controllers/AuthController';
 import { authMiddleware } from './middleware/auth';
 
+
 interface Controllers {
 	// Add new controllers here
 	AuthController: AuthController;
@@ -51,4 +52,4 @@ class Routes {
 	}
 }
 
-export default new Routes().router;
+export default Routes;

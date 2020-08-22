@@ -1,5 +1,8 @@
-import server from './app';
+import ServerSetup from './app';
 
-server.listen(3333, () => {
-	console.log('Server running...');
-})
+(async () => {
+	const server = new ServerSetup();
+	
+	await server.init();
+	server.startApp();
+})();

@@ -1,37 +1,52 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
-import db from '../database/db';
+import { User } from '../database/entities/User';
+import { Credentials } from '../database/entities/Credentials';
+import { getRepository, getConnection } from 'typeorm';
 
-interface User {
-	first_name?: string;
-	last_name?: string;
-	email?: string;
-	password?: string;
-	bio?: string;
-	avatar?: string;
-	whatsapp?: string;
+interface IUser {
+	id?: string;
+	first_name: string;
+	last_name: string;
+	credentials: {
+		email: string;
+		password: string;
+	}
 }
 
-export interface CustomBodyRequest extends Request {
-	body: User;
+export interface CustomRequestBody extends Request {
+	body: IUser;
 }
 
 export default class UserControler {
-	async create(req: CustomBodyRequest, res: Response) {
-		const user = req.body;
+	constructor(
+		private userRepository = getRepository(User)
+	) {}
+
+	create = async (req: CustomRequestBody, res: Response) => {
+		const { first_name, last_name, credentials: { email, password } } = req.body;
 		
 		try {
-			const encryptedPassword = await bcrypt.hash(user.password, 10);
-			
-			await db('users').insert({
-				...user,
-				password: encryptedPassword
+			await getConnection().transaction(async transactionalEntityManager => {
+				const userEntity = transactionalEntityManager.create(User, {
+					first_name,
+					last_name
+				});
+
+				const credentialsEntity = transactionalEntityManager.create(Credentials, {
+					email,
+					password
+				});
+
+				credentialsEntity.user = userEntity;
+				
+				await transactionalEntityManager.save(userEntity);
+				await transactionalEntityManager.save(credentialsEntity);
 			});
 
 			return res.sendStatus(201);
 
 		} catch(err) {
-
+			console.log(err);
 			return res.status(400).json({
 				error: 'Unexpected error while creating a new user'
 			});
@@ -41,26 +56,27 @@ export default class UserControler {
 	async getUserById(req: Request, res: Response) {
 		const userId = res.locals.id;
 
-		const [ user ] = await db('users').where('id', '=', userId);
-		
-		return res.status(200).json(user);
+		// const [ user ] = await db('users').where('id', '=', userId);
+
+		// delete user.password;
+		// delete user.token;
+
+		return res.status(200).json();
 	}
 
-	async update(req: CustomBodyRequest, res: Response) {
+	update = async (req: CustomRequestBody, res: Response) => {
 		const dataToUpdate = req.body;
 
-		const dataToUpdateKeys = Object.getOwnPropertyNames(dataToUpdate);
+		// const dataToUpdateKeys = Object.getOwnPropertyNames(dataToUpdate);
 
 		const userId = res.locals.id;
 
 		try {
-			await db('users').where('id', userId).update({
-				...dataToUpdate
-			});
+			await this.userRepository.save({ id: userId, ...dataToUpdate });
 
-			const [updatedData] = await db('users').where('id', userId).select(dataToUpdateKeys);
+			const user = await this.userRepository.findOne(userId);
 
-			return res.status(200).json(updatedData);
+			return res.status(200).json(user);
 
 		} catch(err) {
 
