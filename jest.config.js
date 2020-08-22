@@ -1,6 +1,7 @@
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
 
+
 module.exports = {
   // All imported modules in your tests should be mocked automatically
   // automock: false,
@@ -18,7 +19,11 @@ module.exports = {
   collectCoverage: false,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
-  collectCoverageFrom: ["src/**", "!src/database/migrations/**", "!src/server.ts"],
+  collectCoverageFrom: [
+		"src/**", 
+		"!src/database/migrations/**",
+		"!src/server.ts"
+	],
 
   // The directory where Jest should output its coverage files
   coverageDirectory: "__tests__/coverage",
@@ -126,7 +131,7 @@ module.exports = {
   // setupFiles: [],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  // setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ["<rootDir>/__tests__/jest-setup.ts"],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,
