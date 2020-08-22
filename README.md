@@ -6,12 +6,12 @@ Backend da aplicação desenvolvida durante a Next Level Week #02 da [Rocketseat
   - Node.js
   - Typescript
 	- Express
-  - Knex
+  - TypeORM
 	- Jest
 
 # Todos!
   - [x] Autenticação de usuários
   - Recuperação de senhas
-  - Atualização de dados do usuário e das aulas
+  - [x] Atualização de dados do usuário e das aulas
   - Paginação na listagem de proffys
-  - Logout da aplicação
+  - [x] Logout da aplicação

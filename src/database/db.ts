@@ -1,13 +1,39 @@
-import knex from 'knex';
-import { Model } from 'objection';
+import { createConnection, getConnection, getConnectionOptions } from 'typeorm';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
-const configs = require('../../knexfile');
+const connection = {
+  async create(){
+		const connectionOption = await getConnectionOptions(process.env.NODE_ENV);
+		const connection = await createConnection({ ...connectionOption, name: "default" });
+		
+		if(process.env.NODE_ENV !== 'production') {
+			await connection.query('PRAGMA foreign_keys = ON');
+		}
+  },
 
-const environment = process.env.NODE_ENV as string;
+  async close(){
+    await getConnection().close(); 
+	},
+	
+	async migrate() {
+		await getConnection().runMigrations();
+	},
 
-const db = knex(configs[environment]);
-Model.knex(db);
+	async dropDatabase() {
+		await getConnection().dropDatabase();
+	},
 
-export default db;
+  async truncateAll(){
+    const connection = getConnection();
+    const entities = connection.entityMetadatas;
+
+    entities.forEach(async (entity) => {
+      const repository = connection.getRepository(entity.name);
+      await repository.query(`DELETE FROM ${entity.tableName}`);
+    });
+	},
+};
+
+export default connection;
