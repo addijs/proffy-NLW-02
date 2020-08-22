@@ -1,32 +1,33 @@
-import request from 'supertest';
-import app from '../../src/app';
-
-export async function createUser(email: string, password = 'fulano123') {
+export async function createUser(email: string, password: string) {
 	const newUser = {
 		first_name: 'Fulano',
 		last_name: 'de Teste',
-		email,
-		password 
+		credentials: {
+			email,
+			password
+		}
 	}
 
-	const res = await request(app).post('/user').send(newUser);
+	const res = await global.testRequest.post('/user').send(newUser);
 
-	return {
-		res,
-		fakeEmail: newUser.email,
-		fakePassword: newUser.password
-	}
+	return res;
 }
 
-export async function createUserAndLogin(email: string) {
-	const { fakeEmail, fakePassword } = await createUser(email);
-
-	const res = await request(app)
+export async function loginUser(email: string, password: string) {
+	const res = await global.testRequest
 		.post('/login')
 		.send({
-			email: fakeEmail,
-			password: fakePassword
+			email,
+			password
 		});
+
+	return res;
+}
+
+export async function createUserAndLogin(email: string, password: string) {
+	await createUser(email, password);
+
+	const res = await loginUser(email, password);
 
 	return res;
 }

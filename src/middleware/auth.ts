@@ -1,11 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import db from '../database/db';
 import dotenv from 'dotenv';
+import { getRepository } from 'typeorm';
+import { User } from '../database/entities/User';
 
 dotenv.config();
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+	const userRepository = getRepository(User);
+
 	const authHeader = req.headers.authorization;
 
 	if(!authHeader) {
@@ -24,7 +27,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
 		}
 
 		try {
-			const [ { token: storagedToken } ] = await db('users').where('id', decoded.id).select('token');
+			const [ { token: storagedToken } ] = await userRepository.findByIds([decoded.id])
 
 			if(token !== storagedToken) {
 				return res.status(401).json({
