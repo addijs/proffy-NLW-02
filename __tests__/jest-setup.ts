@@ -1,13 +1,17 @@
-import ServerSetup from '../src/app';
+import { ServerSetup } from '../src/app';
 import request from 'supertest';
+import connection from '../src/database/db';
 
-const server = new ServerSetup();
+const setup = new ServerSetup();
 
 beforeAll(async () => {
-	await server.init();
-	global.testRequest = request(server.getApp());
+	await setup.init();
+	await connection.migrate();
+
+	global.testRequest = request(setup.getApp());
 });
 
 afterAll(async () => {
-	await server.close();
+	await connection.dropDatabase();
+	await setup.close();
 });

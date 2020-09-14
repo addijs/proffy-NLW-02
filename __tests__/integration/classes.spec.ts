@@ -5,10 +5,6 @@ import { Class } from '../../src/database/entities/Class';
 import { ClassSchedule } from '../../src/database/entities/ClassSchedule';
 
 describe('Classes tests', () => {
-	// beforeEach(async () => {
-	// 	await connection.truncateAll();
-	// });
-
 	it('should be able to a user create a class', async () => {
 		const { body: user } = await createUserAndLogin('fulano@gmail.com', 'fulano123');
 
@@ -26,12 +22,12 @@ describe('Classes tests', () => {
 			.send(classInfo);
 
 		expect(res.status).toBe(201);
-		
-		const [ userWithClass ] = await getRepository(User).findByIds([user.id], { relations: ['class'] });
 
-		expect(userWithClass.class).toHaveProperty('subject', classInfo.subject);
-		expect(userWithClass.class).toHaveProperty('cost', classInfo.cost);
-		expect(userWithClass.class.schedule.length).toBe(1);
+		const [userWithClass] = await getRepository(User).findByIds([user.id], { relations: ['classItem'] });
+
+		expect(userWithClass.classItem).toHaveProperty('subject', classInfo.subject);
+		expect(userWithClass.classItem).toHaveProperty('cost', classInfo.cost);
+		expect(userWithClass.classItem.schedule.length).toBe(1);
 	});
 
 	it('should be able to list user class', async () => {
@@ -70,7 +66,6 @@ describe('Classes tests', () => {
 			})
 			.set('Authorization', `Bearer ${user.token}`);
 
-		console.log(res.body);
 		expect(res.status).toBe(200)
 		expect(res.body.length).toBe(2);
 	});
@@ -88,10 +83,10 @@ describe('Classes tests', () => {
 					{ week_day: 3, from: '12:00', to: '16:00' }
 				]
 			});
-			
+
 		expect(res.status).toBe(200);
 
-		const [ updatedClass ] = await getRepository(Class).findByIds([2]);
+		const [updatedClass] = await getRepository(Class).findByIds([2]);
 
 		expect(updatedClass.schedule[0]).toHaveProperty('week_day', 3);
 	});
@@ -106,7 +101,7 @@ describe('Classes tests', () => {
 
 		expect(res.status).toBe(200);
 
-		const [ classes ] = await getRepository(Class).find({ user: { id }});
+		const [classes] = await getRepository(Class).find({ user: { id } });
 		const schedules = await getRepository(ClassSchedule).find();
 
 		expect(classes).toBeUndefined();

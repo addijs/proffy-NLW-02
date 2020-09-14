@@ -8,14 +8,14 @@ export async function createUser(email: string, password: string) {
 		}
 	}
 
-	const res = await global.testRequest.post('/user').send(newUser);
+	const res = await global.testRequest.post('/users').send(newUser);
 
 	return res;
 }
 
 export async function loginUser(email: string, password: string) {
 	const res = await global.testRequest
-		.post('/login')
+		.post('/auth/login')
 		.send({
 			email,
 			password
