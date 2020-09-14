@@ -9,8 +9,8 @@ module.exports = [
 		migrations: [path.resolve(__dirname, 'src', 'database', 'migrations/*{.ts, .js}')],
 		seeds: [path.resolve(__dirname, 'src', 'database', 'seeds/*{.ts, .js}')],
 		factories: [path.resolve(__dirname, 'src', 'database', 'factories/*{.ts, .js}')],
-		migrationsRun: true,
-		dropSchema: true,
+		// migrationsRun: true,
+		// dropSchema: true,
 		cli: {
 			entitiesDir: 'src/database/entities',
 			migrationsDir: 'src/database/migrations'
