@@ -5,9 +5,10 @@ Backend da aplicação desenvolvida durante a Next Level Week #02 da [Rocketseat
 ### Techs
   - Node.js
   - Typescript
-	- Express
+	- OvernightJS ( Express com decorators do Typescript 😄)
   - TypeORM
 	- Jest
+  - Supertest
 
 # Todos!
   - [x] Autenticação de usuários
