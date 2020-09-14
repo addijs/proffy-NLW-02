@@ -11,6 +11,5 @@ export default class CreateClassSchedules implements Seeder {
 			classEntity.id = i;
 			await factory(ClassSchedule)().createMany(2, { class: classEntity });
 		}
-	
   }
 }

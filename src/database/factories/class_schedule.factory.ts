@@ -3,7 +3,7 @@ import { define } from 'typeorm-seeding';
 import { ClassSchedule } from '../entities/ClassSchedule'
 
 define(ClassSchedule, (faker: typeof Faker) => {
-	const week_day = faker.random.number(6);
+	const week_day = faker.random.number({ min: 1, max: 5 });
 	const from = faker.random.number({ min: 1, max: 20 });
 	const to = faker.random.number({ min: from+1, max: 21 });
 
