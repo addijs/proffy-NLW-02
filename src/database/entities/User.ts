@@ -1,4 +1,4 @@
-import {Entity, PrimaryGeneratedColumn, Column, OneToOne, BeforeInsert, AfterLoad} from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, AfterLoad } from "typeorm";
 import { Class } from './Class';
 import { Connection } from './Connection';
 import { Credentials } from './Credentials';
@@ -11,7 +11,7 @@ export class User {
 
 	@Column()
 	first_name: string;
-	
+
 	@Column()
 	last_name: string;
 
@@ -28,11 +28,19 @@ export class User {
 	token: string;
 
 	@OneToOne(type => Class, classItem => classItem.user)
-	class: Class;
+	classItem: Class;
 
 	@OneToOne(type => Connection, connection => connection.user)
 	connection: Connection;
 
 	@OneToOne(type => Credentials, credentials => credentials.user)
 	credentials: Credentials;
+
+	// @AfterLoad()
+	// toJSON() {
+	// 	delete this.id;
+	// 	delete this.token;
+
+	// 	return this;
+	// }
 }

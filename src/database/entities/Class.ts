@@ -14,7 +14,7 @@ export class Class {
 	@Column()
 	cost: number;
 
-	@OneToOne(type => User, user => user.class)
+	@OneToOne(type => User, user => user.classItem)
 	@JoinColumn({ name: 'user_id' })
 	user: User;
 
