@@ -1,12 +1,16 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { getConnection, getRepository } from 'typeorm';
 import { User } from '../database/entities/User';
 import { Class } from '../database/entities/Class';
 import { ClassSchedule } from '../database/entities/ClassSchedule';
+import { Controller, Get, Post, Put, Delete, ClassMiddleware, ClassErrorMiddleware } from '@overnightjs/core';
+import authMiddleware from '../middleware/AuthMiddleware';
+import errorMiddleware from '../middleware/ErrorHandlerMiddleware';
+import { InternalError } from '../middleware/Error/APIExceptionHandler';
 
 function convertHoursToMinutes(time: string) {
 	const [hour, minutes] = time.split(':').map(Number);
-	
+
 	const timeInMinutes = (hour * 60) + minutes;
 
 	return timeInMinutes;
@@ -28,13 +32,17 @@ interface CustomClassesRequest<T> extends Request {
 	body: T
 }
 
-export default class ClassesController {
+@Controller('classes')
+@ClassMiddleware(authMiddleware)
+@ClassErrorMiddleware(errorMiddleware)
+export class ClassesController {
 	constructor(
 		private classRepository = getRepository(Class),
-		private classScheduleRepository = getRepository(ClassSchedule)
-	) {}
+		private classScheduleRepository = getRepository(ClassSchedule),
+	) { }
 
-	index = async (req: Request, res: Response) => {
+	@Get('all')
+	index = async (req: Request, res: Response, next: NextFunction) => {
 		const userId = res.locals.id;
 		const currentPage = Number(req.query.page);
 
@@ -45,21 +53,25 @@ export default class ClassesController {
 		try {
 			const storagedClasses = await this.classRepository.find({ relations: ['user'] });
 
-			if(!storagedClasses) {
+			if (!storagedClasses) {
 				return res.status(200).json([]);
 			}
 
-			return res.status(200).json(storagedClasses);
-
-		} catch(err) {
-			
-			return res.status(400).json({
-				error: 'Unexpected error while listing classes'
+			const filteredStoragedClasses = storagedClasses.map(classItem => {
+				delete classItem.user.id;
+				delete classItem.user.token;
+				return classItem;
 			});
+
+			return res.status(200).json(filteredStoragedClasses);
+
+		} catch (err) {
+			return next(new InternalError('listining classes'));
 		}
 	}
 
-	create = async (req: CustomClassesRequest<IClassesInfo>, res: Response) => {
+	@Post()
+	create = async (req: CustomClassesRequest<IClassesInfo>, res: Response, next: NextFunction) => {
 		const user_id = res.locals.id;
 
 		const {
@@ -69,16 +81,16 @@ export default class ClassesController {
 		} = req.body;
 
 		try {
-			
+
 			// Creating a transaction
 			await getConnection().transaction(async transactionalEntityManager => {
-				const [ classUser ] = await transactionalEntityManager.findByIds(User, [user_id]);
-	
+				const [classUser] = await transactionalEntityManager.findByIds(User, [user_id]);
+
 				const classEntity = transactionalEntityManager.create(Class);
 				classEntity.subject = subject;
 				classEntity.cost = cost;
 				classEntity.user = classUser;
-				
+
 				const insertedClass = await transactionalEntityManager.save(classEntity);
 
 				const classSchedule = schedule.map(scheduleItem => {
@@ -88,7 +100,7 @@ export default class ClassesController {
 						from: convertHoursToMinutes(scheduleItem.from),
 						to: convertHoursToMinutes(scheduleItem.to)
 					}
-	
+
 					return transactionalEntityManager
 						.getRepository(ClassSchedule)
 						.create(classScheduleObject);
@@ -98,15 +110,13 @@ export default class ClassesController {
 			});
 
 			return res.sendStatus(201);
-		} catch(err) {
-			
-			return res.status(400).json({
-				error: 'Unexpected error while creating new class'
-			});
+		} catch (err) {
+			return next(new InternalError('creating a new class'));
 		}
 	}
 
-	getClass = async (req: Request, res: Response) => {
+	@Get('user')
+	getClass = async (req: Request, res: Response, next: NextFunction) => {
 		const userId = res.locals.id;
 
 		try {
@@ -115,29 +125,28 @@ export default class ClassesController {
 					user: { id: userId }
 				}
 			});
-	
-			if(userClasses.length === 0) {
+
+			if (userClasses.length === 0) {
 				return res.status(200).json({
 					subject: '',
 					cost: '',
 					schedule: []
 				});
 			}
-	
+
 			return res.status(200).json(userClasses);
 
-		} catch(err) {
-			res.status(400).json({
-				error: 'Unexpected error while getting class'
-			})
+		} catch (err) {
+			return next(new InternalError('getting a class'));
 		}
 
 	}
 
+	@Put()
 	update = async (req: CustomClassesRequest<{
 		class_id: number;
 		newSchedule: IScheduleItem[]
-	}>, res: Response) => {
+	}>, res: Response, next: NextFunction) => {
 
 		const { class_id, newSchedule } = req.body;
 
@@ -155,31 +164,26 @@ export default class ClassesController {
 				return this.classScheduleRepository.create(classScheduleObject);
 			});
 
-			await this.classScheduleRepository.delete({ class: { id: class_id }});
+			await this.classScheduleRepository.delete({ class: { id: class_id } });
 			await this.classScheduleRepository.save(schedule);
 
 			res.sendStatus(200);
-		} catch(err) {
-			
-			return res.status(400).json({
-				error: 'Unexpected error while updating class'
-			});
+		} catch (err) {
+			return next(new InternalError('updating a class'));
 		}
 	}
-	
-	delete = async (req: Request, res: Response) => {
+
+	@Delete()
+	delete = async (req: Request, res: Response, next: NextFunction) => {
 		const userId = res.locals.id;
 
 		try {
-			await this.classRepository.delete({ user: { id: userId }});
+			await this.classRepository.delete({ user: { id: userId } });
 
-			res.sendStatus(200);
+			return res.sendStatus(200);
 
-		} catch(err) {
-
-			res.status(400).json({
-				error: 'Unexpected error while deleting class'
-			});
+		} catch (err) {
+			return next(new InternalError('deleting a class'));
 		}
 	}
 }

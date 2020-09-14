@@ -1,9 +1,13 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { User } from '../database/entities/User';
 import { Credentials } from '../database/entities/Credentials';
 import { getRepository, getConnection } from 'typeorm';
+import { NotFoundError, InternalError } from '../middleware/Error/APIExceptionHandler';
+import authMiddleware from '../middleware/AuthMiddleware';
+import { Controller, Post, Get, Middleware, Put, ClassErrorMiddleware } from '@overnightjs/core';
+import errorMiddleware from '../middleware/ErrorHandlerMiddleware';
 
-interface IUser {
+export interface IUser {
 	id?: string;
 	first_name: string;
 	last_name: string;
@@ -17,14 +21,17 @@ export interface CustomRequestBody extends Request {
 	body: IUser;
 }
 
-export default class UserControler {
+@Controller('users')
+@ClassErrorMiddleware(errorMiddleware)
+export class UserControler {
 	constructor(
 		private userRepository = getRepository(User)
-	) {}
+	) { }
 
-	create = async (req: CustomRequestBody, res: Response) => {
+	@Post()
+	create = async (req: CustomRequestBody, res: Response, next: NextFunction) => {
 		const { first_name, last_name, credentials: { email, password } } = req.body;
-		
+
 		try {
 			await getConnection().transaction(async transactionalEntityManager => {
 				const userEntity = transactionalEntityManager.create(User, {
@@ -38,33 +45,45 @@ export default class UserControler {
 				});
 
 				credentialsEntity.user = userEntity;
-				
+
 				await transactionalEntityManager.save(userEntity);
 				await transactionalEntityManager.save(credentialsEntity);
 			});
 
 			return res.sendStatus(201);
 
-		} catch(err) {
-			console.log(err);
-			return res.status(400).json({
-				error: 'Unexpected error while creating a new user'
-			});
+		} catch (err) {
+			return next(new InternalError('creating a new user'));
 		}
 	}
 
-	async getUserById(req: Request, res: Response) {
+	@Get()
+	@Middleware(authMiddleware)
+	getUserById = async (req: Request, res: Response, next: NextFunction) => {
 		const userId = res.locals.id;
 
-		// const [ user ] = await db('users').where('id', '=', userId);
+		try {
+			const user = await this.userRepository.findOne(userId, {
+				relations: ['classItem']
+			});
 
-		// delete user.password;
-		// delete user.token;
+			if (!user) {
+				return next(new NotFoundError('User'));
+			}
 
-		return res.status(200).json();
+			delete user?.id;
+			delete user?.token;
+
+			return res.status(200).json(user);
+		} catch (err) {
+			return next(new InternalError('finding User'));
+		}
+
 	}
 
-	update = async (req: CustomRequestBody, res: Response) => {
+	@Put()
+	@Middleware(authMiddleware)
+	update = async (req: CustomRequestBody, res: Response, next: NextFunction) => {
 		const dataToUpdate = req.body;
 
 		// const dataToUpdateKeys = Object.getOwnPropertyNames(dataToUpdate);
@@ -78,11 +97,8 @@ export default class UserControler {
 
 			return res.status(200).json(user);
 
-		} catch(err) {
-
-			return res.status(404).json({
-				error: 'Unexpected error while updating user'
-			});
+		} catch (err) {
+			return next(new InternalError('updating User'));
 		}
 	}
 }

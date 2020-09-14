@@ -5,9 +5,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsnd --transpile-only --respawn --ignore-watch node_modules src/server.ts --ignore ./src/__tests__",
-		"typeorm:env": "ts-node ./node_modules/typeorm/cli.js",
-		"typeorm:seed": "ts-node ./node_modules/typeorm-seeding/dist/cli.js",
-		"entity:create": "yarn typeorm:env entity:create -c development -n",
+    "typeorm:env": "ts-node ./node_modules/typeorm/cli.js",
+    "typeorm:seed": "ts-node ./node_modules/typeorm-seeding/dist/cli.js",
+    "entity:create": "yarn typeorm:env entity:create -c development -n",
     "migration:create": "yarn typeorm:env migration:create -c development -n",
     "migration:run": "yarn typeorm:env migration:run -c development",
     "seed:run": "yarn typeorm:seed seed --configName ormconfig.ts --connection development",
@@ -30,6 +30,7 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
+    "@overnightjs/core": "^1.7.5",
     "bcrypt": "^5.0.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
